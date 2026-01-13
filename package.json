@@ -1,0 +1,18 @@
+{
+  "name": "tech-news-rss-reader",
+  "version": "1.0.0",
+  "description": "RSS Reader for US Major Tech Companies and Technology Media",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "rss-parser": "^3.13.0",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
