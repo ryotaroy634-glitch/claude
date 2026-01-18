@@ -1,16 +1,22 @@
 {
   "name": "tech-news-rss-reader",
-  "version": "1.0.0",
-  "description": "RSS Reader for US Major Tech Companies and Technology Media",
+  "version": "2.0.0",
+  "description": "RSS Reader for US Major Tech Companies and Technology Media with Database and Email Notifications",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "collect": "node scripts/collect.js",
+    "init-db": "node scripts/init-db.js"
   },
   "dependencies": {
     "express": "^4.18.2",
     "rss-parser": "^3.13.0",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "better-sqlite3": "^9.4.3",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.9",
+    "dotenv": "^16.4.1"
   },
   "engines": {
     "node": ">=18.0.0"

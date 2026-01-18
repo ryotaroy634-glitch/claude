@@ -49,6 +49,7 @@
     .controls {
       display: flex;
       justify-content: center;
+      align-items: center;
       gap: 15px;
       flex-wrap: wrap;
       padding: 20px;
@@ -57,6 +58,39 @@
       position: sticky;
       top: 0;
       z-index: 100;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 25px;
+      padding: 5px 15px;
+      transition: border-color 0.3s ease;
+    }
+
+    .search-box:focus-within {
+      border-color: #667eea;
+    }
+
+    .search-box input {
+      background: transparent;
+      border: none;
+      color: #e0e0e0;
+      font-size: 0.9rem;
+      padding: 5px;
+      width: 180px;
+      outline: none;
+    }
+
+    .search-box input::placeholder {
+      color: #666;
+    }
+
+    .search-icon {
+      color: #666;
+      margin-right: 5px;
     }
 
     .filter-btn {
@@ -81,26 +115,39 @@
       color: white;
     }
 
-    .refresh-btn {
+    .action-btn {
       padding: 10px 25px;
       border: none;
       border-radius: 25px;
-      background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%);
-      color: white;
       cursor: pointer;
       font-size: 0.9rem;
       font-weight: 600;
-      transition: transform 0.2s ease;
+      transition: transform 0.2s ease, opacity 0.2s ease;
     }
 
-    .refresh-btn:hover {
+    .action-btn:hover {
       transform: scale(1.05);
     }
 
-    .refresh-btn:disabled {
+    .action-btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
       transform: none;
+    }
+
+    .refresh-btn {
+      background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%);
+      color: white;
+    }
+
+    .read-all-btn {
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .collect-btn {
+      background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+      color: white;
     }
 
     .stats {
@@ -120,6 +167,10 @@
       font-size: 1.5rem;
       font-weight: 700;
       color: #667eea;
+    }
+
+    .stat-value.unread {
+      color: #38ef7d;
     }
 
     .stat-label {
@@ -205,6 +256,7 @@
       padding: 12px 15px;
       border-bottom: 1px solid #252525;
       transition: background 0.2s ease;
+      cursor: pointer;
     }
 
     .feed-item:last-child {
@@ -213,6 +265,14 @@
 
     .feed-item:hover {
       background: #252525;
+    }
+
+    .feed-item.read {
+      opacity: 0.6;
+    }
+
+    .feed-item.read a {
+      color: #888;
     }
 
     .feed-item a {
@@ -235,6 +295,15 @@
       color: #666;
     }
 
+    .unread-badge {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #38ef7d;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+
     .timeline-view {
       max-width: 800px;
       margin: 0 auto;
@@ -246,10 +315,15 @@
       margin-left: 20px;
       position: relative;
       transition: border-color 0.2s ease;
+      cursor: pointer;
     }
 
     .timeline-item:hover {
       border-color: #667eea;
+    }
+
+    .timeline-item.read {
+      opacity: 0.6;
     }
 
     .timeline-item::before {
@@ -266,6 +340,10 @@
 
     .timeline-item:hover::before {
       background: #667eea;
+    }
+
+    .timeline-item.unread::before {
+      background: #38ef7d;
     }
 
     .timeline-source {
@@ -360,6 +438,19 @@
       color: #fff;
     }
 
+    .notification-bar {
+      background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%);
+      color: white;
+      padding: 10px 20px;
+      text-align: center;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    .notification-bar.show {
+      display: block;
+    }
+
     footer {
       text-align: center;
       padding: 40px;
@@ -388,19 +479,34 @@
         font-size: 0.85rem;
       }
 
+      .search-box input {
+        width: 120px;
+      }
+
       .stats {
         gap: 20px;
+      }
+
+      .action-btn {
+        padding: 8px 15px;
+        font-size: 0.8rem;
       }
     }
   </style>
 </head>
 <body>
+  <div id="notification-bar" class="notification-bar"></div>
+
   <header>
     <h1>Tech News RSS Reader</h1>
     <p>US Major Tech Companies & Technology Media Updates</p>
   </header>
 
   <div class="controls">
+    <div class="search-box">
+      <span class="search-icon">&#x1F50D;</span>
+      <input type="text" id="search-input" placeholder="Search articles..." onkeyup="handleSearch(event)">
+    </div>
     <button class="filter-btn active" data-filter="all">All</button>
     <button class="filter-btn" data-filter="Tech Companies">Tech Companies</button>
     <button class="filter-btn" data-filter="Tech Media">Tech Media</button>
@@ -408,7 +514,9 @@
       <button class="view-btn active" data-view="grid">Grid</button>
       <button class="view-btn" data-view="timeline">Timeline</button>
     </div>
-    <button class="refresh-btn" onclick="fetchAllFeeds()">Refresh</button>
+    <button class="action-btn refresh-btn" onclick="fetchAllFeeds()">Refresh</button>
+    <button class="action-btn read-all-btn" onclick="markAllRead()">Mark All Read</button>
+    <button class="action-btn collect-btn" onclick="triggerCollect()">Collect Now</button>
   </div>
 
   <div class="stats">
@@ -419,6 +527,10 @@
     <div class="stat">
       <div class="stat-value" id="article-count">0</div>
       <div class="stat-label">Articles</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value unread" id="unread-count">0</div>
+      <div class="stat-label">Unread</div>
     </div>
     <div class="stat">
       <div class="stat-value" id="last-updated">-</div>
@@ -438,12 +550,14 @@
 
   <footer>
     <p>Tech News RSS Reader - Aggregating news from major tech companies and media</p>
+    <p style="margin-top: 10px; font-size: 0.8rem;">Auto-refresh: 5 min | Collection interval: 10 min</p>
   </footer>
 
   <script>
     let feedsData = [];
     let currentFilter = 'all';
     let currentView = 'grid';
+    let searchQuery = '';
 
     async function fetchAllFeeds() {
       const content = document.getElementById('content');
@@ -479,11 +593,156 @@
       }
     }
 
+    async function searchArticles(query) {
+      if (!query || query.length < 2) {
+        fetchAllFeeds();
+        return;
+      }
+
+      const content = document.getElementById('content');
+      content.innerHTML = `
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <p>Searching...</p>
+        </div>
+      `;
+
+      try {
+        const response = await fetch(`/api/items?search=${encodeURIComponent(query)}&limit=100`);
+        const data = await response.json();
+
+        // Convert items to feed format for rendering
+        const groupedItems = {};
+        for (const item of data.items) {
+          const key = item.source_name || 'Unknown';
+          if (!groupedItems[key]) {
+            groupedItems[key] = {
+              name: item.source_name,
+              icon: item.source_icon || '',
+              category: item.category || 'Other',
+              items: []
+            };
+          }
+          groupedItems[key].items.push({
+            id: item.id,
+            title: item.title,
+            link: item.link,
+            pubDate: item.published_at,
+            content: item.summary || '',
+            creator: item.creator || '',
+            read: item.read_at !== null
+          });
+        }
+
+        feedsData = Object.values(groupedItems);
+        document.getElementById('article-count').textContent = data.items.length;
+        renderFeeds();
+      } catch (error) {
+        content.innerHTML = `
+          <div class="loading">
+            <p style="color: #ff6b6b;">Search failed. Please try again.</p>
+          </div>
+        `;
+      }
+    }
+
+    function handleSearch(event) {
+      if (event.key === 'Enter') {
+        searchQuery = event.target.value.trim();
+        searchArticles(searchQuery);
+      }
+    }
+
+    async function markItemRead(itemId, element) {
+      try {
+        await fetch(`/api/items/${itemId}/read`, { method: 'POST' });
+        element.classList.add('read');
+        element.classList.remove('unread');
+
+        // Update unread count
+        const unreadCount = document.getElementById('unread-count');
+        const current = parseInt(unreadCount.textContent) || 0;
+        if (current > 0) {
+          unreadCount.textContent = current - 1;
+        }
+      } catch (error) {
+        console.error('Failed to mark as read:', error);
+      }
+    }
+
+    async function markAllRead() {
+      const btn = document.querySelector('.read-all-btn');
+      btn.disabled = true;
+      btn.textContent = 'Marking...';
+
+      try {
+        await fetch('/api/items/read-all', { method: 'POST' });
+        document.getElementById('unread-count').textContent = '0';
+
+        // Update UI
+        document.querySelectorAll('.feed-item, .timeline-item').forEach(el => {
+          el.classList.add('read');
+          el.classList.remove('unread');
+        });
+
+        showNotification('All articles marked as read');
+      } catch (error) {
+        console.error('Failed to mark all as read:', error);
+        showNotification('Failed to mark all as read', true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Mark All Read';
+      }
+    }
+
+    async function triggerCollect() {
+      const btn = document.querySelector('.collect-btn');
+      btn.disabled = true;
+      btn.textContent = 'Collecting...';
+
+      try {
+        const response = await fetch('/api/collect', { method: 'POST' });
+        const data = await response.json();
+
+        if (data.success) {
+          const newItems = data.result?.newItems?.length || 0;
+          showNotification(`Collection complete. ${newItems} new articles found.`);
+          setTimeout(fetchAllFeeds, 1000);
+        } else {
+          throw new Error(data.error || 'Collection failed');
+        }
+      } catch (error) {
+        console.error('Failed to trigger collection:', error);
+        showNotification('Collection failed', true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Collect Now';
+      }
+    }
+
+    function showNotification(message, isError = false) {
+      const bar = document.getElementById('notification-bar');
+      bar.textContent = message;
+      bar.style.background = isError
+        ? 'linear-gradient(90deg, #ff6b6b 0%, #ee5a5a 100%)'
+        : 'linear-gradient(90deg, #11998e 0%, #38ef7d 100%)';
+      bar.classList.add('show');
+
+      setTimeout(() => {
+        bar.classList.remove('show');
+      }, 3000);
+    }
+
     function updateStats(data) {
       document.getElementById('feed-count').textContent = data.feeds.length;
 
       const totalArticles = data.feeds.reduce((sum, feed) => sum + feed.items.length, 0);
       document.getElementById('article-count').textContent = totalArticles;
+
+      // Update unread count from stats
+      if (data.stats) {
+        document.getElementById('unread-count').textContent = data.stats.unreadItems || 0;
+      }
 
       const updateTime = new Date(data.fetchedAt);
       document.getElementById('last-updated').textContent = updateTime.toLocaleTimeString();
@@ -519,8 +778,11 @@
               </div>
               <div class="feed-items">
                 ${feed.items.slice(0, 5).map(item => `
-                  <div class="feed-item">
-                    <a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">
+                  <div class="feed-item ${item.read ? 'read' : 'unread'}"
+                       onclick="markItemRead(${item.id}, this)"
+                       data-id="${item.id}">
+                    ${!item.read ? '<span class="unread-badge"></span>' : ''}
+                    <a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">
                       ${escapeHtml(item.title)}
                     </a>
                     <div class="feed-item-meta">
@@ -555,13 +817,15 @@
       container.innerHTML = `
         <div class="timeline-view">
           ${allItems.map(item => `
-            <div class="timeline-item">
+            <div class="timeline-item ${item.read ? 'read' : 'unread'}"
+                 onclick="markItemRead(${item.id}, this)"
+                 data-id="${item.id}">
               <div class="timeline-source">
                 <span class="feed-icon">${item.feedIcon}</span>
                 <span class="timeline-source-name">${escapeHtml(item.feedName)}</span>
                 <span class="feed-category">${item.feedCategory}</span>
               </div>
-              <a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer" class="timeline-title">
+              <a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer" class="timeline-title" onclick="event.stopPropagation()">
                 ${escapeHtml(item.title)}
               </a>
               <div class="timeline-meta">
