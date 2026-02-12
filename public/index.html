@@ -1,655 +1,397 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tech News RSS Reader</title>
+  <title>帰国準備リマインダー</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    :root {
+      color-scheme: light dark;
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1c2330;
+      --muted: #607089;
+      --accent: #2267ff;
+      --accent-2: #1abfa5;
+      --danger: #cf456a;
+      --border: #dbe3ef;
+      --done: #eef9f6;
     }
+
+    * { box-sizing: border-box; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-      background: #0f0f0f;
-      color: #e0e0e0;
-      line-height: 1.6;
-    }
-
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    header {
-      text-align: center;
-      padding: 40px 20px;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      border-bottom: 1px solid #333;
-    }
-
-    header h1 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      margin-bottom: 10px;
-      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    header p {
-      color: #888;
-      font-size: 1.1rem;
-    }
-
-    .controls {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      flex-wrap: wrap;
-      padding: 20px;
-      background: #1a1a1a;
-      border-bottom: 1px solid #333;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .filter-btn {
-      padding: 10px 20px;
-      border: 1px solid #444;
-      border-radius: 25px;
-      background: transparent;
-      color: #ccc;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: all 0.3s ease;
-    }
-
-    .filter-btn:hover {
-      border-color: #667eea;
-      color: #667eea;
-    }
-
-    .filter-btn.active {
-      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-      border-color: transparent;
-      color: white;
-    }
-
-    .refresh-btn {
-      padding: 10px 25px;
-      border: none;
-      border-radius: 25px;
-      background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%);
-      color: white;
-      cursor: pointer;
-      font-size: 0.9rem;
-      font-weight: 600;
-      transition: transform 0.2s ease;
-    }
-
-    .refresh-btn:hover {
-      transform: scale(1.05);
-    }
-
-    .refresh-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .stats {
-      display: flex;
-      justify-content: center;
-      gap: 30px;
-      padding: 15px;
-      background: #151515;
-      border-bottom: 1px solid #333;
-    }
-
-    .stat {
-      text-align: center;
-    }
-
-    .stat-value {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #667eea;
-    }
-
-    .stat-label {
-      font-size: 0.8rem;
-      color: #888;
-      text-transform: uppercase;
-    }
-
-    .loading {
-      text-align: center;
-      padding: 60px;
-      color: #888;
-    }
-
-    .loading-spinner {
-      width: 50px;
-      height: 50px;
-      border: 3px solid #333;
-      border-top-color: #667eea;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 20px;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .feed-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      gap: 20px;
-      padding: 20px 0;
-    }
-
-    .feed-card {
-      background: #1a1a1a;
-      border-radius: 12px;
-      border: 1px solid #2a2a2a;
-      overflow: hidden;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .feed-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-      border-color: #444;
-    }
-
-    .feed-card-header {
-      padding: 15px;
-      background: #222;
-      border-bottom: 1px solid #333;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .feed-icon {
-      font-size: 1.5rem;
-    }
-
-    .feed-title {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #fff;
-      flex: 1;
-    }
-
-    .feed-category {
-      font-size: 0.7rem;
-      padding: 4px 10px;
-      border-radius: 12px;
-      background: #333;
-      color: #aaa;
-    }
-
-    .feed-items {
-      padding: 10px 0;
-    }
-
-    .feed-item {
-      padding: 12px 15px;
-      border-bottom: 1px solid #252525;
-      transition: background 0.2s ease;
-    }
-
-    .feed-item:last-child {
-      border-bottom: none;
-    }
-
-    .feed-item:hover {
-      background: #252525;
-    }
-
-    .feed-item a {
-      color: #e0e0e0;
-      text-decoration: none;
-      font-size: 0.9rem;
-      line-height: 1.4;
-      display: block;
-    }
-
-    .feed-item a:hover {
-      color: #667eea;
-    }
-
-    .feed-item-meta {
-      display: flex;
-      gap: 15px;
-      margin-top: 6px;
-      font-size: 0.75rem;
-      color: #666;
-    }
-
-    .timeline-view {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .timeline-item {
-      padding: 20px;
-      border-left: 2px solid #333;
-      margin-left: 20px;
-      position: relative;
-      transition: border-color 0.2s ease;
-    }
-
-    .timeline-item:hover {
-      border-color: #667eea;
-    }
-
-    .timeline-item::before {
-      content: '';
-      position: absolute;
-      left: -7px;
-      top: 25px;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #333;
-      border: 2px solid #1a1a1a;
-    }
-
-    .timeline-item:hover::before {
-      background: #667eea;
-    }
-
-    .timeline-source {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .timeline-source-name {
-      font-size: 0.85rem;
-      color: #888;
-    }
-
-    .timeline-title {
-      font-size: 1.1rem;
-      color: #e0e0e0;
-      text-decoration: none;
-      line-height: 1.4;
-    }
-
-    .timeline-title:hover {
-      color: #667eea;
-    }
-
-    .timeline-meta {
-      margin-top: 8px;
-      font-size: 0.8rem;
-      color: #666;
-    }
-
-    .timeline-content {
-      margin-top: 10px;
-      font-size: 0.9rem;
-      color: #999;
+      margin: 0;
+      font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      background: linear-gradient(160deg, #eef3ff, #f9fbff 45%, #f2fff9);
+      color: var(--text);
       line-height: 1.5;
     }
 
-    .errors-section {
-      margin-top: 40px;
-      padding: 20px;
-      background: #1a1a1a;
+    .app {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 28px 16px 44px;
+    }
+
+    .hero {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 6px 24px rgba(30, 61, 120, 0.08);
+      margin-bottom: 20px;
+    }
+
+    h1 { margin: 0; font-size: clamp(1.5rem, 2vw, 2.1rem); }
+    .sub { margin: 8px 0 0; color: var(--muted); }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .badge {
+      border: 1px solid var(--border);
       border-radius: 12px;
-      border: 1px solid #442222;
+      padding: 10px 12px;
+      background: #fbfcff;
     }
 
-    .errors-title {
-      color: #ff6b6b;
-      margin-bottom: 15px;
-      font-size: 1rem;
+    .badge .num { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+    .badge .label { color: var(--muted); font-size: 0.86rem; }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 6px 18px rgba(26, 60, 110, 0.06);
     }
 
-    .error-item {
-      padding: 10px;
-      margin-bottom: 8px;
-      background: #221a1a;
-      border-radius: 6px;
-      font-size: 0.85rem;
+    .panel h2 {
+      font-size: 1.08rem;
+      margin: 0 0 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    .error-name {
-      color: #ff9999;
+    .hint { color: var(--muted); font-size: 0.85rem; margin-left: 8px; }
+
+    .list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: #fff;
+    }
+
+    .item.done { background: var(--done); }
+
+    .item-main { flex: 1; }
+
+    .title-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 5px;
+    }
+
+    .title {
+      font-weight: 700;
+    }
+
+    .priority {
+      font-size: 0.72rem;
+      border-radius: 999px;
+      padding: 2px 8px;
+      border: 1px solid;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .high { color: #9f1542; border-color: #eb9eb8; background: #fff2f6; }
+    .mid { color: #7e5600; border-color: #ecd394; background: #fff9e8; }
+    .low { color: #165f57; border-color: #9de2d7; background: #edfefa; }
+
+    .meta {
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+
+    .category {
+      color: var(--accent);
       font-weight: 600;
     }
 
-    .error-message {
-      color: #888;
-      margin-top: 4px;
+    .custom-form {
+      display: grid;
+      grid-template-columns: 2fr 1.2fr 1fr auto;
+      gap: 8px;
     }
 
-    .view-toggle {
-      display: flex;
-      gap: 5px;
-      background: #222;
-      padding: 5px;
-      border-radius: 25px;
+    input, select, button {
+      font: inherit;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 10px;
+      background: #fff;
+      color: var(--text);
     }
 
-    .view-btn {
-      padding: 8px 16px;
+    .primary {
       border: none;
-      border-radius: 20px;
-      background: transparent;
-      color: #888;
-      cursor: pointer;
-      font-size: 0.85rem;
-      transition: all 0.2s ease;
-    }
-
-    .view-btn.active {
-      background: #333;
+      background: linear-gradient(90deg, var(--accent), #6d8fff);
       color: #fff;
+      cursor: pointer;
+      font-weight: 700;
     }
 
-    footer {
+    .danger {
+      border: 1px solid #ec9fb4;
+      background: #fff3f7;
+      color: var(--danger);
+      cursor: pointer;
+    }
+
+    .footer {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
       text-align: center;
-      padding: 40px;
-      color: #666;
-      font-size: 0.85rem;
-      border-top: 1px solid #222;
-      margin-top: 40px;
     }
 
-    @media (max-width: 768px) {
-      header h1 {
-        font-size: 1.8rem;
-      }
-
-      .feed-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .controls {
-        padding: 15px;
-        gap: 10px;
-      }
-
-      .filter-btn {
-        padding: 8px 15px;
-        font-size: 0.85rem;
-      }
-
-      .stats {
-        gap: 20px;
-      }
+    @media (max-width: 700px) {
+      .custom-form { grid-template-columns: 1fr; }
+      .item { align-items: center; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Tech News RSS Reader</h1>
-    <p>US Major Tech Companies & Technology Media Updates</p>
-  </header>
+  <main class="app">
+    <section class="hero">
+      <h1>🇯🇵 久しぶりの帰国準備リマインダー</h1>
+      <p class="sub">「忘れ物ゼロ」を目指して、優先度とカテゴリでやることを整理できます。チェック状態はブラウザに保存されます。</p>
+      <div class="summary" id="summary"></div>
+    </section>
 
-  <div class="controls">
-    <button class="filter-btn active" data-filter="all">All</button>
-    <button class="filter-btn" data-filter="Tech Companies">Tech Companies</button>
-    <button class="filter-btn" data-filter="Tech Media">Tech Media</button>
-    <div class="view-toggle">
-      <button class="view-btn active" data-view="grid">Grid</button>
-      <button class="view-btn" data-view="timeline">Timeline</button>
-    </div>
-    <button class="refresh-btn" onclick="fetchAllFeeds()">Refresh</button>
-  </div>
+    <section class="panel">
+      <h2>
+        標準チェックリスト
+        <span class="hint">出発前に最低限確認したい項目</span>
+      </h2>
+      <ul class="list" id="defaultList"></ul>
+    </section>
 
-  <div class="stats">
-    <div class="stat">
-      <div class="stat-value" id="feed-count">0</div>
-      <div class="stat-label">Sources</div>
-    </div>
-    <div class="stat">
-      <div class="stat-value" id="article-count">0</div>
-      <div class="stat-label">Articles</div>
-    </div>
-    <div class="stat">
-      <div class="stat-value" id="last-updated">-</div>
-      <div class="stat-label">Last Updated</div>
-    </div>
-  </div>
+    <section class="panel">
+      <h2>
+        自分用メモを追加
+        <span class="hint">家族へのお土産、充電器など自由に追加</span>
+      </h2>
+      <form class="custom-form" id="customForm">
+        <input id="customTitle" required placeholder="例: 祖父母へのお土産を買う" maxlength="80" />
+        <select id="customCategory">
+          <option value="持ち物">持ち物</option>
+          <option value="手続き">手続き</option>
+          <option value="連絡">連絡</option>
+          <option value="現地準備">現地準備</option>
+          <option value="その他">その他</option>
+        </select>
+        <select id="customPriority">
+          <option value="high">高</option>
+          <option value="mid" selected>中</option>
+          <option value="low">低</option>
+        </select>
+        <button class="primary" type="submit">追加</button>
+      </form>
+      <ul class="list" id="customList" style="margin-top: 12px;"></ul>
+    </section>
 
-  <div class="container">
-    <div id="content">
-      <div class="loading">
-        <div class="loading-spinner"></div>
-        <p>Loading feeds...</p>
+    <section class="panel">
+      <h2>便利アクション</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="danger" id="resetChecks" type="button">チェック状態をリセット</button>
+        <button class="danger" id="clearCustom" type="button">自分用メモを全削除</button>
       </div>
-    </div>
-    <div id="errors"></div>
-  </div>
+    </section>
 
-  <footer>
-    <p>Tech News RSS Reader - Aggregating news from major tech companies and media</p>
-  </footer>
+    <p class="footer">Tip: 出発3日前・前日・当日の3回に分けて見直すと忘れにくいです。</p>
+  </main>
 
   <script>
-    let feedsData = [];
-    let currentFilter = 'all';
-    let currentView = 'grid';
+    const STORAGE_KEY = 'homecoming-reminder-v1';
 
-    async function fetchAllFeeds() {
-      const content = document.getElementById('content');
-      const refreshBtn = document.querySelector('.refresh-btn');
+    const defaultTasks = [
+      { id: 'passport', title: 'パスポート・在留カード・身分証を確認', category: '手続き', priority: 'high' },
+      { id: 'flight', title: '航空券・搭乗時間・ターミナルを再確認', category: '手続き', priority: 'high' },
+      { id: 'insurance', title: '海外旅行保険・緊急連絡先をスクショ保存', category: '手続き', priority: 'mid' },
+      { id: 'sim', title: '日本で使うSIM/eSIMや通信手段の準備', category: '現地準備', priority: 'mid' },
+      { id: 'gifts', title: '家族・友人へのお土産をパッキング', category: '持ち物', priority: 'mid' },
+      { id: 'medicine', title: '常備薬・処方薬・英文の説明書を準備', category: '持ち物', priority: 'high' },
+      { id: 'charger', title: 'スマホ/PC/変換プラグ/充電器をまとめる', category: '持ち物', priority: 'high' },
+      { id: 'contact', title: '帰国日を家族に共有し空港到着連絡の段取りを決める', category: '連絡', priority: 'low' }
+    ];
 
-      content.innerHTML = `
-        <div class="loading">
-          <div class="loading-spinner"></div>
-          <p>Fetching feeds...</p>
-        </div>
-      `;
+    const state = loadState();
 
-      refreshBtn.disabled = true;
-      refreshBtn.textContent = 'Loading...';
+    function loadState() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { checks: {}, customTasks: [] };
 
       try {
-        const response = await fetch('/api/all-feeds');
-        const data = await response.json();
-
-        feedsData = data.feeds;
-        updateStats(data);
-        renderFeeds();
-        renderErrors(data.errors);
-      } catch (error) {
-        content.innerHTML = `
-          <div class="loading">
-            <p style="color: #ff6b6b;">Failed to load feeds. Please try again.</p>
-          </div>
-        `;
-      } finally {
-        refreshBtn.disabled = false;
-        refreshBtn.textContent = 'Refresh';
+        const parsed = JSON.parse(raw);
+        return {
+          checks: parsed.checks || {},
+          customTasks: Array.isArray(parsed.customTasks) ? parsed.customTasks : []
+        };
+      } catch {
+        return { checks: {}, customTasks: [] };
       }
     }
 
-    function updateStats(data) {
-      document.getElementById('feed-count').textContent = data.feeds.length;
-
-      const totalArticles = data.feeds.reduce((sum, feed) => sum + feed.items.length, 0);
-      document.getElementById('article-count').textContent = totalArticles;
-
-      const updateTime = new Date(data.fetchedAt);
-      document.getElementById('last-updated').textContent = updateTime.toLocaleTimeString();
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
 
-    function renderFeeds() {
-      const content = document.getElementById('content');
-      const filteredFeeds = currentFilter === 'all'
-        ? feedsData
-        : feedsData.filter(feed => feed.category === currentFilter);
-
-      if (currentView === 'grid') {
-        renderGridView(content, filteredFeeds);
-      } else {
-        renderTimelineView(content, filteredFeeds);
-      }
+    function priorityText(level) {
+      return level === 'high' ? '優先:高' : level === 'mid' ? '優先:中' : '優先:低';
     }
 
-    function renderGridView(container, feeds) {
-      if (feeds.length === 0) {
-        container.innerHTML = '<div class="loading"><p>No feeds available</p></div>';
-        return;
-      }
+    function renderItem(task, isCustom = false) {
+      const li = document.createElement('li');
+      li.className = `item ${state.checks[task.id] ? 'done' : ''}`;
 
-      container.innerHTML = `
-        <div class="feed-grid">
-          ${feeds.map(feed => `
-            <div class="feed-card">
-              <div class="feed-card-header">
-                <span class="feed-icon">${feed.icon}</span>
-                <span class="feed-title">${escapeHtml(feed.name)}</span>
-                <span class="feed-category">${feed.category}</span>
-              </div>
-              <div class="feed-items">
-                ${feed.items.slice(0, 5).map(item => `
-                  <div class="feed-item">
-                    <a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer">
-                      ${escapeHtml(item.title)}
-                    </a>
-                    <div class="feed-item-meta">
-                      <span>${formatDate(item.pubDate)}</span>
-                      ${item.creator ? `<span>${escapeHtml(item.creator)}</span>` : ''}
-                    </div>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      `;
-    }
-
-    function renderTimelineView(container, feeds) {
-      const allItems = feeds
-        .flatMap(feed => feed.items.map(item => ({
-          ...item,
-          feedName: feed.name,
-          feedIcon: feed.icon,
-          feedCategory: feed.category
-        })))
-        .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
-        .slice(0, 50);
-
-      if (allItems.length === 0) {
-        container.innerHTML = '<div class="loading"><p>No articles available</p></div>';
-        return;
-      }
-
-      container.innerHTML = `
-        <div class="timeline-view">
-          ${allItems.map(item => `
-            <div class="timeline-item">
-              <div class="timeline-source">
-                <span class="feed-icon">${item.feedIcon}</span>
-                <span class="timeline-source-name">${escapeHtml(item.feedName)}</span>
-                <span class="feed-category">${item.feedCategory}</span>
-              </div>
-              <a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer" class="timeline-title">
-                ${escapeHtml(item.title)}
-              </a>
-              <div class="timeline-meta">
-                ${formatDate(item.pubDate)}
-                ${item.creator ? ` · ${escapeHtml(item.creator)}` : ''}
-              </div>
-              ${item.content ? `<div class="timeline-content">${escapeHtml(truncate(item.content, 200))}</div>` : ''}
-            </div>
-          `).join('')}
-        </div>
-      `;
-    }
-
-    function renderErrors(errors) {
-      const errorsContainer = document.getElementById('errors');
-
-      if (!errors || errors.length === 0) {
-        errorsContainer.innerHTML = '';
-        return;
-      }
-
-      errorsContainer.innerHTML = `
-        <div class="errors-section">
-          <h3 class="errors-title">Failed to load ${errors.length} feed(s)</h3>
-          ${errors.map(error => `
-            <div class="error-item">
-              <div class="error-name">${escapeHtml(error.name)}</div>
-              <div class="error-message">${escapeHtml(error.error)}</div>
-            </div>
-          `).join('')}
-        </div>
-      `;
-    }
-
-    function escapeHtml(text) {
-      if (!text) return '';
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    function formatDate(dateStr) {
-      if (!dateStr) return '';
-      const date = new Date(dateStr);
-      const now = new Date();
-      const diff = now - date;
-
-      const minutes = Math.floor(diff / 60000);
-      const hours = Math.floor(diff / 3600000);
-      const days = Math.floor(diff / 86400000);
-
-      if (minutes < 60) return `${minutes}m ago`;
-      if (hours < 24) return `${hours}h ago`;
-      if (days < 7) return `${days}d ago`;
-
-      return date.toLocaleDateString();
-    }
-
-    function truncate(text, maxLength) {
-      if (!text || text.length <= maxLength) return text;
-      return text.substring(0, maxLength) + '...';
-    }
-
-    // Event listeners for filter buttons
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentFilter = btn.dataset.filter;
-        renderFeeds();
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = Boolean(state.checks[task.id]);
+      checkbox.addEventListener('change', () => {
+        state.checks[task.id] = checkbox.checked;
+        saveState();
+        render();
       });
+
+      const main = document.createElement('div');
+      main.className = 'item-main';
+
+      const titleLine = document.createElement('div');
+      titleLine.className = 'title-line';
+
+      const title = document.createElement('span');
+      title.className = 'title';
+      title.textContent = task.title;
+
+      const priority = document.createElement('span');
+      priority.className = `priority ${task.priority}`;
+      priority.textContent = priorityText(task.priority);
+
+      titleLine.append(title, priority);
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.innerHTML = `カテゴリ: <span class="category">${task.category}</span>`;
+
+      main.append(titleLine, meta);
+      li.append(checkbox, main);
+
+      if (isCustom) {
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'danger';
+        del.textContent = '削除';
+        del.addEventListener('click', () => {
+          state.customTasks = state.customTasks.filter((t) => t.id !== task.id);
+          delete state.checks[task.id];
+          saveState();
+          render();
+        });
+        li.appendChild(del);
+      }
+
+      return li;
+    }
+
+    function renderSummary() {
+      const allTasks = [...defaultTasks, ...state.customTasks];
+      const done = allTasks.filter((task) => state.checks[task.id]).length;
+      const remaining = allTasks.length - done;
+      const highLeft = allTasks.filter((task) => task.priority === 'high' && !state.checks[task.id]).length;
+
+      const summary = document.getElementById('summary');
+      summary.innerHTML = '';
+
+      [
+        { num: `${done}/${allTasks.length}`, label: '進捗' },
+        { num: remaining, label: '未完了' },
+        { num: highLeft, label: '高優先の残り' }
+      ].forEach((s) => {
+        const card = document.createElement('div');
+        card.className = 'badge';
+        card.innerHTML = `<div class="num">${s.num}</div><div class="label">${s.label}</div>`;
+        summary.appendChild(card);
+      });
+    }
+
+    function render() {
+      const defaultList = document.getElementById('defaultList');
+      const customList = document.getElementById('customList');
+      defaultList.innerHTML = '';
+      customList.innerHTML = '';
+
+      defaultTasks.forEach((task) => defaultList.appendChild(renderItem(task, false)));
+      state.customTasks.forEach((task) => customList.appendChild(renderItem(task, true)));
+
+      renderSummary();
+    }
+
+    document.getElementById('customForm').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const titleEl = document.getElementById('customTitle');
+      const categoryEl = document.getElementById('customCategory');
+      const priorityEl = document.getElementById('customPriority');
+
+      const title = titleEl.value.trim();
+      if (!title) return;
+
+      state.customTasks.push({
+        id: `custom-${Date.now()}`,
+        title,
+        category: categoryEl.value,
+        priority: priorityEl.value
+      });
+      titleEl.value = '';
+      saveState();
+      render();
     });
 
-    // Event listeners for view toggle
-    document.querySelectorAll('.view-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentView = btn.dataset.view;
-        renderFeeds();
-      });
+    document.getElementById('resetChecks').addEventListener('click', () => {
+      state.checks = {};
+      saveState();
+      render();
     });
 
-    // Initial fetch
-    fetchAllFeeds();
+    document.getElementById('clearCustom').addEventListener('click', () => {
+      state.customTasks.forEach((task) => delete state.checks[task.id]);
+      state.customTasks = [];
+      saveState();
+      render();
+    });
 
-    // Auto-refresh every 5 minutes
-    setInterval(fetchAllFeeds, 5 * 60 * 1000);
+    render();
   </script>
 </body>
 </html>

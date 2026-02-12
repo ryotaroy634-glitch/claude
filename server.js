@@ -8,7 +8,7 @@ const app = express();
 const parser = new Parser({
   timeout: 10000,
   headers: {
-    'User-Agent': 'Tech News RSS Reader/1.0'
+    'User-Agent': 'Homecoming Reminder App/1.0'
   }
 });
 
@@ -139,5 +139,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Tech News RSS Reader running at http://localhost:${PORT}`);
+  console.log(`Homecoming Reminder App running at http://localhost:${PORT}`);
 });

@@ -1,14 +1,14 @@
-# Tech News RSS Reader
+# 帰国準備リマインダー
 
-US主要テック企業とテクノロジーメディアの最新情報を集約するRSSリーダーです。
+久しぶりの帰国で忘れ物を防ぐためのチェックリストアプリです。
 
 ## Features
 
-- **Tech Companies**: Amazon (AWS), Apple, Google, Meta, Microsoft, OpenAI, Anthropic, xAI
-- **Tech Media**: TechCrunch, The Verge, Wired, Ars Technica, Engadget, CNET, Hacker News, VentureBeat
-- Grid/Timeline表示切り替え
-- カテゴリフィルター
-- 5分間隔の自動更新
+- すぐ使える標準チェックリスト（手続き・持ち物・連絡・現地準備）
+- 優先度（高/中/低）表示
+- 自分専用タスクの追加・削除
+- 進捗（完了数/未完了数/高優先残数）の自動集計
+- チェック状態と追加タスクをブラウザに保存（LocalStorage）
 
 ## Setup
 
@@ -22,5 +22,4 @@ Open http://localhost:3000
 ## Tech Stack
 
 - Backend: Node.js + Express
-- RSS Parser: rss-parser
-- Frontend: Vanilla JavaScript
+- Frontend: Vanilla JavaScript + LocalStorage
