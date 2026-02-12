@@ -1,26 +1,35 @@
-# Tech News RSS Reader
+# Tech RSS Reader Aggregator
 
-US主要テック企業とテクノロジーメディアの最新情報を集約するRSSリーダーです。
+ブラウザで動作する RSS リーダー/アグリゲーターです。
 
-## Features
+## 実装概要
 
-- **Tech Companies**: Amazon (AWS), Apple, Google, Meta, Microsoft, OpenAI, Anthropic, xAI
-- **Tech Media**: TechCrunch, The Verge, Wired, Ars Technica, Engadget, CNET, Hacker News, VentureBeat
-- Grid/Timeline表示切り替え
-- カテゴリフィルター
-- 5分間隔の自動更新
+- フロントエンド: **React + TypeScript (Babel in-browser) + Tailwind CSS**
+- バックエンド: **Node.js + Express**
+- データ保存: **SQLite** (sqlite3 CLI を利用)
+- RSS解析: **rss-parser**
+- フィード不達時: **HTMLスクレイピングへフォールバック**
+- スケジューラー: **30分間隔** + PT 5:00〜22:00 だけ更新
 
-## Setup
+## API
+
+- `GET /api/articles?page=1&pageSize=20&category=&sourceGroup=&sourceId=&read=`
+- `GET /api/sources`
+- `POST /api/refresh`
+- `PATCH /api/articles/:id/read` (`{ "isRead": true|false }`)
+
+## 実行
 
 ```bash
 npm install
 npm start
 ```
 
-Open http://localhost:3000
+`http://localhost:3000` にアクセス。
 
-## Tech Stack
+## 補足
 
-- Backend: Node.js + Express
-- RSS Parser: rss-parser
-- Frontend: Vanilla JavaScript
+- 重複排除は `URL + タイトル` の SHA-256 ハッシュで実施。
+- 取得リトライは最大3回（指数バックオフ）。
+- 一部フィード失敗時も他フィード処理を継続。
+- 失敗/成功ログは `fetch_logs` テーブルへ保存。
